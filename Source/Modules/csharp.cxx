@@ -4059,10 +4059,9 @@ public:
     String *callback_code = NewString("");
     String *imcall_args = NewString("");
     bool ignored_method = GetFlag(n, "feature:ignore") ? true : false;
-
-    UpcallData *udata = 0;
+        UpcallData *udata = 0;
     String *methid = 0;
-
+       String *imclass_dmethod;
     // Kludge Alert: functionWrapper sets sym:overload properly, but it
     // isn't at this point, so we have to manufacture it ourselves. At least
     // we're consistent with the sym:overload name in functionWrapper. (?? when
@@ -4071,7 +4070,12 @@ public:
       overloaded_name = getOverloadedName(n);
 
     qualified_return = SwigType_rcaststr(returntype, "c_result");
-
+    if (!ignored_method) {
+      /* Emit the actual upcall through */      
+         imclass_dmethod = NewStringf("SwigDirector_%s", Swig_name_member(getNSpace(), getClassPrefix(), overloaded_name));
+      udata = addUpcallMethod(imclass_dmethod, symname, decl, overloaded_name);
+      methid = Getattr(udata, "class_methodidx");
+    }
     if (!is_void && (!ignored_method || pure_virtual)) {
       if (!SwigType_isclass(returntype)) {
 	if (!(SwigType_ispointer(returntype) || SwigType_isreference(returntype))) {
@@ -4553,8 +4557,6 @@ if (mono_aot_compatibility_flag)
     if (!ignored_method) {
       String *member_name = Swig_name_member(getNSpace(), getClassPrefix(), overloaded_name);
       String *imclass_dmethod = NewStringf("SwigDirector_%s", member_name);
-      udata = addUpcallMethod(imclass_dmethod, symname, decl, overloaded_name);
-      methid = Getattr(udata, "class_methodidx");
       Setattr(n, "upcalldata", udata);
       /*
       Printf(stdout, "setting upcalldata, nodeType: %s %s::%s %p\n", nodeType(n), classname, Getattr(n, "name"), n);
