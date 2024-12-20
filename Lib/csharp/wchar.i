@@ -38,7 +38,13 @@ static void * SWIG_csharp_wstring_callback(const wchar_t *s) {
 
     [global::System.Runtime.InteropServices.DllImport("$dllimport", EntryPoint="SWIGRegisterWStringCallback_$module")]
     public static extern void SWIGRegisterWStringCallback_$module(SWIGWStringDelegate wstringUTF16Delegate, SWIGWStringDelegate wstringUTF32Delegate);
-
+%}
+#if defined(SWIG_CSHARP_MONO_AOT_COMPATIBILITY)
+%pragma(csharp) imclasscode=%{
+    [$imclassname.MonoPInvokeCallback(typeof(SWIGWStringDelegate))]
+%}
+#endif
+%pragma(csharp) imclasscode=%{
     public static string CreateWStringFromUTF16([global::System.Runtime.InteropServices.MarshalAs(global::System.Runtime.InteropServices.UnmanagedType.LPWStr)]global::System.IntPtr cString, int length) {
       return global::System.Runtime.InteropServices.Marshal.PtrToStringUni(cString, length);
     }
