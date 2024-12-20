@@ -2053,7 +2053,7 @@ public:
     Printf(proxy_class_code, "      global::System.Runtime.InteropServices.GCHandle swigDelegate%sgcHandle = global::System.Runtime.InteropServices.GCHandle.Alloc(swigDelegate%s, global::System.Runtime.InteropServices.GCHandleType.Weak);\n", methid, methid);
     Printf(proxy_class_code, "      swigDelegate%sgcHandlePtr = global::System.Runtime.InteropServices.GCHandle.ToIntPtr(swigDelegate%sgcHandle);\n", methid, methid);
   }
-  Append(proxy_class_code, "    }\n")
+  Append(proxy_class_code, "    }\n");
       }
       String *director_connect_method_name = Swig_name_member(getNSpace(), getClassPrefix(), "director_connect");
       Printf(proxy_class_code, "    %s.%s(swigCPtr", imclass_name, director_connect_method_name);
@@ -4059,6 +4059,7 @@ public:
     String *callback_code = NewString("");
     String *imcall_args = NewString("");
     bool ignored_method = GetFlag(n, "feature:ignore") ? true : false;
+
     UpcallData *udata = 0;
     String *methid = 0;
 
@@ -4066,17 +4067,10 @@ public:
     // isn't at this point, so we have to manufacture it ourselves. At least
     // we're consistent with the sym:overload name in functionWrapper. (?? when
     // does the overloaded method name get set?)
-
     if (!ignored_method)
       overloaded_name = getOverloadedName(n);
 
     qualified_return = SwigType_rcaststr(returntype, "c_result");
-  if (!ignored_method) {
-      /* Emit the actual upcall through */      
-      udata = addUpcallMethod(imclass_dmethod, symname, decl, overloaded_name);
-      methid = Getattr(udata, "class_methodidx");
-      Setattr(n, "upcalldata", udata);
-    }
 
     if (!is_void && (!ignored_method || pure_virtual)) {
       if (!SwigType_isclass(returntype)) {
@@ -4543,7 +4537,7 @@ public:
 	Replaceall(w->code, "$null", "");
       }
       Replaceall(w->code, "$isvoid", is_void ? "1" : "0");
-      if (!ignored_method) {}
+      if (!ignored_method) {
 	Printv(director_delegate_callback, "\n", callback_def, callback_code, NIL);
 if (mono_aot_compatibility_flag)
     Printv(director_delegate_callback, callback_mono_aot_def, callback_mono_aot_code, NIL);
@@ -4557,7 +4551,11 @@ if (mono_aot_compatibility_flag)
     }
 
     if (!ignored_method) {
-
+      String *member_name = Swig_name_member(getNSpace(), getClassPrefix(), overloaded_name);
+      String *imclass_dmethod = NewStringf("SwigDirector_%s", member_name);
+      udata = addUpcallMethod(imclass_dmethod, symname, decl, overloaded_name);
+      methid = Getattr(udata, "class_methodidx");
+      Setattr(n, "upcalldata", udata);
       /*
       Printf(stdout, "setting upcalldata, nodeType: %s %s::%s %p\n", nodeType(n), classname, Getattr(n, "name"), n);
       */
@@ -4583,7 +4581,6 @@ if (mono_aot_compatibility_flag)
       Printf(director_delegate_instances, "  private SwigDelegate%s_%s swigDelegate%s;\n", classname, methid, methid);
       Printf(director_method_types, "  private static global::System.Type[] swigMethodTypes%s = new global::System.Type[] { %s };\n", methid, proxy_method_types);
       Printf(director_connect_parms, "SwigDirector%s%s delegate%s", classname, methid, methid);
-
       Delete(imclass_dmethod);
       Delete(member_name);
     }
