@@ -24,16 +24,24 @@
   public $csclassname(global::System.Collections.IEnumerable c) : this() {
     if (c == null)
       throw new global::System.ArgumentNullException("c");
+    int length = (c as System.Collections.ICollection).Count;
+    this.resize((uint)length);
+    int i = 0;
     foreach ($typemap(cstype, CTYPE) element in c) {
-      this.Add(element);
+      this[i] = element;
+      i++;
     }
   }
 
   public $csclassname(global::System.Collections.Generic.IEnumerable<$typemap(cstype, CTYPE)> c) : this() {
     if (c == null)
       throw new global::System.ArgumentNullException("c");
-    foreach ($typemap(cstype, CTYPE) element in c) {
-      this.Add(element);
+      int length = (c as System.Collections.ICollection).Count;
+      this.resize((uint)length);
+      int i = 0;
+      foreach ($typemap(cstype, CTYPE) element in c) {
+      this[i] = element;
+      i++;
     }
   }
 
@@ -117,8 +125,11 @@
 
   public $typemap(cstype, CTYPE)[] ToArray() {
     $typemap(cstype, CTYPE)[] array = new $typemap(cstype, CTYPE)[this.Count];
-    this.CopyTo(array);
-    return array;
+      for (int i =0; i < this.Count; i++)
+      {
+         array[i] = this[i];
+      }
+      return array;
   }
 
   global::System.Collections.Generic.IEnumerator<$typemap(cstype, CTYPE)> global::System.Collections.Generic.IEnumerable<$typemap(cstype, CTYPE)>.GetEnumerator() {
@@ -224,6 +235,14 @@
     %newobject Repeat(CTYPE const& value, int count);
 
     %extend {
+    void resize(size_t newSize) {
+    $self->resize(newSize);
+  }
+
+  void resize(size_t newSize, CTYPE const& value) {
+    $self->resize(newSize, value);
+  }
+
       vector(int capacity) throw (std::out_of_range) {
         std::vector< CTYPE >* pv = 0;
         if (capacity >= 0) {
